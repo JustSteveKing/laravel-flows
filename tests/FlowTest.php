@@ -119,4 +119,30 @@ final class FlowTest extends PackageTestCase
 
         $this->assertFalse(isset($result['modified']));
     }
+
+    #[Test]
+    public function runIfStepIsExecutedWhenConditionIsTrue(): void
+    {
+        $condition = function ($payload): bool {
+            return true;
+        };
+
+        $flow = Flow::start()->runIf($condition, DummyStep::class);
+        $result = $flow->execute('bar');
+
+        $this->assertEquals('bar foo', $result);
+    }
+
+    #[Test]
+    public function runIfStepIsSkippedWhenConditionIsFalse(): void
+    {
+        $condition = function ($payload): bool {
+            return false;
+        };
+
+        $flow = Flow::start()->runIf($condition, DummyStep::class);
+        $result = $flow->execute('bar');
+
+        $this->assertEquals('bar', $result);
+    }
 }

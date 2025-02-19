@@ -58,6 +58,25 @@ final class Flow
     }
 
     /**
+     * Add a step that will only run if the condition is met.
+     *
+     * @param callable $condition A callable that receives the payload and returns a boolean.
+     * @param class-string<FlowStep> $action
+     * @return $this
+     */
+    public function runIf(callable $condition, string $action): self
+    {
+        $this->steps[] = static function ($payload, $next) use ($condition, $action) {
+            if (!$condition($payload)) {
+                return $next($payload);
+            }
+            return resolve($action)->handle($payload, $next);
+        };
+
+        return $this;
+    }
+
+    /**
      * @param class-string<FlowStep> $action
      * @return $this
      */
