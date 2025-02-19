@@ -1,0 +1,90 @@
+{
+  "name": "juststeveking/laravel-flows",
+  "description": "A fluent, modular workflow builder for Laravel.",
+  "license": "MIT",
+  "type": "library",
+  "keywords": [
+    "laravel",
+    "workflow",
+    "flows",
+    "builder"
+  ],
+  "readme": "README.md",
+  "authors": [
+    {
+      "role": "Developer",
+      "name": "Steve McDougall",
+      "email": "juststevemcd@gmail.com",
+      "homepage": "https://juststeveking.link/"
+    }
+  ],
+  "homepage": "https://github.com/juststeveking/laravel-flows",
+  "support": {
+    "email": "juststevemcd@gmail.com",
+    "issues": "https://github.com/juststeveking/laravel-flows/issues",
+    "source": "https://github.com/juststeveking/laravel-flows"
+  },
+  "funding": [
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/juststeveking"
+    }
+  ],
+  "require": {
+    "php": "^8.3"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.21",
+    "orchestra/testbench": "^9.11",
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-strict-rules": "^2.0",
+    "phpunit/phpunit": "^11.5.8",
+    "roave/security-advisories": "dev-latest"
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "autoload": {
+    "psr-4": {
+      "JustSteveKing\\Flows\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "JustSteveKing\\Flows\\Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {},
+    "github-protocols": [
+      "git",
+      "ssh",
+      "https"
+    ],
+    "optimize-autoloader": true,
+    "classmap-authoritative": true,
+    "sort-packages": true,
+    "bump-after-update": false
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "JustSteveKing\\Flows\\Providers\\PackageServiceProvider"
+      ]
+    }
+  },
+  "scripts": {
+    "lint": [
+      "./vendor/bin/pint --test"
+    ],
+    "pint": [
+      "./vendor/bin/pint"
+    ],
+    "stan": [
+      "./vendor/bin/phpstan analyse --memory-limit=-1"
+    ],
+    "test": [
+      "./vendor/bin/phpunit --testdox"
+    ]
+  },
+  "scripts-descriptions": {}
+}
