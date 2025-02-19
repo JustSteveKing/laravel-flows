@@ -231,6 +231,46 @@ $result = Flow::start()
     ->execute(payload: ['processStepFour' => false, 'data' => 'test']);
 ```
 
+### Catching Exceptions
+
+The `catch` method allows you to handle exceptions that occur during the flow execution. You can add error handling logic that will intercept any exceptions thrown by previous steps in the flow.
+
+```php
+use JustSteveKing\Flows\Flow;
+
+$flow = Flow::start()->run(
+    action: RiskyOperation::class,
+)->catch(
+    errorHandler: function (Throwable $e, mixed $payload) {
+        // Handle the exception
+        return $payload; // or return modified payload
+    },
+);
+```
+
+Example with Error Logging:
+
+```php
+use JustSteveKing\Flows\Flow;
+use Illuminate\Support\Facades\Log;
+
+$flow = Flow::start()
+    ->run(CreateUser::class)
+    ->catch(function (Throwable $e, array $payload) {
+        Log::error('User creation failed', [
+            'error' => $e->getMessage(),
+            'payload' => $payload,
+        ]);
+        
+        return array_merge($payload, ['error' => 'Failed to create user']);
+    });
+
+$result = $flow->execute([
+    'email' => 'user@example.com',
+    'name' => 'Test User',
+]);
+```
+
 ### Putting It All Together
 
 When defining your workflows, you can mix and match steps and conditions seamlessly. Use `run()` or `chain()` for your steps and `branch()` for conditionally running sub-flows. This keeps your business logic clean and flexible.
