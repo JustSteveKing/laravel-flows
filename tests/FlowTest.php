@@ -123,9 +123,7 @@ final class FlowTest extends PackageTestCase
     #[Test]
     public function runIfStepIsExecutedWhenConditionIsTrue(): void
     {
-        $condition = function ($payload): bool {
-            return true;
-        };
+        $condition = fn($payload): bool => true;
 
         $flow = Flow::start()->runIf($condition, DummyStep::class);
         $result = $flow->execute('bar');
@@ -136,9 +134,7 @@ final class FlowTest extends PackageTestCase
     #[Test]
     public function runIfStepIsSkippedWhenConditionIsFalse(): void
     {
-        $condition = function ($payload): bool {
-            return false;
-        };
+        $condition = fn($payload): bool => false;
 
         $flow = Flow::start()->runIf($condition, DummyStep::class);
         $result = $flow->execute('bar');

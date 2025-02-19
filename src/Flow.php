@@ -66,8 +66,8 @@ final class Flow
      */
     public function runIf(callable $condition, string $action): self
     {
-        $this->steps[] = static function ($payload, $next) use ($condition, $action) {
-            if (!$condition($payload)) {
+        $this->steps[] = static function (mixed $payload, Closure $next) use ($condition, $action) {
+            if ( ! $condition($payload)) {
                 return $next($payload);
             }
             return resolve($action)->handle($payload, $next);
