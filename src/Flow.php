@@ -103,6 +103,19 @@ final class Flow
         return $this;
     }
 
+    public function catch(callable $errorHandler): Flow
+    {
+        $this->steps[] = static function (mixed $payload, Closure $next) use ($errorHandler) {
+            try {
+                return $next($payload);
+            } catch (Throwable $e) {
+                return $errorHandler($e, $payload);
+            }
+        };
+
+        return $this;
+    }
+
     /**
      * @param mixed $payload
      * @return mixed
