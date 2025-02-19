@@ -261,7 +261,7 @@ final class FlowTest extends PackageTestCase
     public function it_propagates_exceptions_without_catch_handler(): void
     {
         $flow = Flow::start()
-            ->run(function ($payload) {
+            ->run(function ($payload): void {
                 throw new RuntimeException('Unhandled error');
             });
 
