@@ -8,6 +8,8 @@ use Closure;
 use Illuminate\Support\Facades\Pipeline;
 use JustSteveKing\Flows\Contracts\FlowCondition;
 use JustSteveKing\Flows\Contracts\FlowStep;
+use RuntimeException;
+use Throwable;
 
 final class Flow
 {
@@ -52,6 +54,39 @@ final class Flow
             }
 
             return $next($payload);
+        };
+
+        return $this;
+    }
+
+    /**
+     * Add a step that will only run if the condition is met.
+     *
+     * @param callable $condition A callable that receives the payload and returns a boolean.
+     * @param class-string<FlowStep> $action
+     * @return $this
+     */
+    public function runIf(callable $condition, string $action): self
+    {
+        $this->steps[] = static function (mixed $payload, Closure $next) use ($condition, $action) {
+            if ( ! $condition($payload)) {
+                return $next($payload);
+            }
+
+            try {
+                /** @var FlowStep $step */
+                $step = resolve($action);
+            } catch (Throwable $exception) {
+                throw new RuntimeException(
+                    message: sprintf('Failed to resolve action class [%s]: %s', $action, $exception->getMessage()),
+                    previous: $exception,
+                );
+            }
+
+            return $step->handle(
+                payload: $payload,
+                next: $next,
+            );
         };
 
         return $this;

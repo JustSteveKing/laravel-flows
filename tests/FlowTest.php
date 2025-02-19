@@ -12,6 +12,7 @@ use JustSteveKing\Flows\Tests\Doubles\ExceptionStep;
 use JustSteveKing\Flows\Tests\Doubles\IsFalse;
 use JustSteveKing\Flows\Tests\Doubles\IsTrue;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 
 final class FlowTest extends PackageTestCase
 {
@@ -118,5 +119,40 @@ final class FlowTest extends PackageTestCase
         $result = $flow->execute($payload);
 
         $this->assertFalse(isset($result['modified']));
+    }
+
+    #[Test]
+    public function runIfStepIsExecutedWhenConditionIsTrue(): void
+    {
+        $condition = fn($payload): bool => true;
+
+        $flow = Flow::start()->runIf($condition, DummyStep::class);
+        $result = $flow->execute('bar');
+
+        $this->assertEquals('bar foo', $result);
+    }
+
+    #[Test]
+    public function runIfStepIsSkippedWhenConditionIsFalse(): void
+    {
+        $condition = fn($payload): bool => false;
+
+        $flow = Flow::start()->runIf($condition, DummyStep::class);
+        $result = $flow->execute('bar');
+
+        $this->assertEquals('bar', $result);
+    }
+
+    #[Test]
+    public function runIfThrowsRuntimeExceptionWhenActionCannotBeResolved(): void
+    {
+        // Condition returns true, so the step will be attempted.
+        $condition = fn($payload): bool => true;
+        $invalidAction = 'NonExistent\Step';
+
+        $flow = Flow::start()->runIf($condition, $invalidAction);
+
+        $this->expectException(RuntimeException::class);
+        $flow->execute('bar');
     }
 }

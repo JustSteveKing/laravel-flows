@@ -26,7 +26,7 @@ With a fluent API, you can easily chain steps, incorporate conditional logic, an
 
 ## Features
 
-- **Fluent API**: Easily chain workflow steps using methods like `run()`, `branch()`, and `chain()`.
+- **Fluent API**: Easily chain workflow steps using methods like `run()`, `branch()`, `chain()`, and the new `runIf()`.
 - **Conditional Branches**: Integrate custom conditions using your own implementations of `FlowCondition`.
 - **Testable & Modular**: Each step is isolated, making it a breeze to unit test and maintain.
 
@@ -212,6 +212,25 @@ class IsVIPUser implements FlowCondition
 }
 ```
 
+### Automatic Step Skipping
+
+Instead of embedding skip logic within each step, you can use the `runIf()` method to automatically skip steps based on a condition. This method takes a callable condition and an action. If the condition evaluates to true, the step executes; otherwise, it is skipped.
+
+```php
+use JustSteveKing\Flows\Flow;
+use App\Flows\Steps\StepTwo;
+use App\Flows\Steps\StepFour;
+
+$shouldRunStepFour = function ($payload): bool {
+    return !empty($payload['processStepFour']);
+};
+
+$result = Flow::start()
+    ->run(action: StepTwo::class)
+    ->runIf($shouldRunStepFour, StepFour::class)
+    ->execute(payload: ['processStepFour' => false, 'data' => 'test']);
+```
+
 ### Putting It All Together
 
 When defining your workflows, you can mix and match steps and conditions seamlessly. Use `run()` or `chain()` for your steps and `branch()` for conditionally running sub-flows. This keeps your business logic clean and flexible.
@@ -254,7 +273,7 @@ By following these interfaces, every step in your workflow will have a consisten
 
 ```mermaid
 flowchart TD
-    A[Flow] --> B[run Steps]
+    A[Flow::start] --> B[run Steps]
     B --> C[branch Conditions]
     C --> D[chain Steps]
     D --> E[execute Payload]
