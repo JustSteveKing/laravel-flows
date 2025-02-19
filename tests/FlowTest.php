@@ -12,6 +12,7 @@ use JustSteveKing\Flows\Tests\Doubles\ExceptionStep;
 use JustSteveKing\Flows\Tests\Doubles\IsFalse;
 use JustSteveKing\Flows\Tests\Doubles\IsTrue;
 use PHPUnit\Framework\Attributes\Test;
+use RuntimeException;
 
 final class FlowTest extends PackageTestCase
 {
@@ -140,5 +141,18 @@ final class FlowTest extends PackageTestCase
         $result = $flow->execute('bar');
 
         $this->assertEquals('bar', $result);
+    }
+
+    #[Test]
+    public function runIfThrowsRuntimeExceptionWhenActionCannotBeResolved(): void
+    {
+        // Condition returns true, so the step will be attempted.
+        $condition = fn($payload): bool => true;
+        $invalidAction = 'NonExistent\Step';
+
+        $flow = Flow::start()->runIf($condition, $invalidAction);
+
+        $this->expectException(RuntimeException::class);
+        $flow->execute('bar');
     }
 }

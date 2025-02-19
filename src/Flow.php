@@ -8,6 +8,8 @@ use Closure;
 use Illuminate\Support\Facades\Pipeline;
 use JustSteveKing\Flows\Contracts\FlowCondition;
 use JustSteveKing\Flows\Contracts\FlowStep;
+use RuntimeException;
+use Throwable;
 
 final class Flow
 {
@@ -70,7 +72,21 @@ final class Flow
             if ( ! $condition($payload)) {
                 return $next($payload);
             }
-            return resolve($action)->handle($payload, $next);
+
+            try {
+                /** @var FlowStep $step */
+                $step = resolve($action);
+            } catch (Throwable $exception) {
+                throw new RuntimeException(
+                    message: sprintf('Failed to resolve action class [%s]: %s', $action, $exception->getMessage()),
+                    previous: $exception,
+                );
+            }
+
+            return $step->handle(
+                payload: $payload,
+                next: $next,
+            );
         };
 
         return $this;
