@@ -1,8 +1,21 @@
 # Laravel Flows
 
-[![Build Status](https://img.shields.io/github/actions/workflow/status/juststeveking/laravel-flows/ci.yml?branch=main)](https://github.com/juststeveking/laravel-flows/actions?query=workflow%3Aci)
-[![Coverage Status](https://img.shields.io/codecov/c/github/juststeveking/laravel-flows/main)](https://codecov.io/gh/juststeveking/laravel-flows)
+<!-- BADGES_START -->
+[![PHP Version][badge-php]][php]
+[![Latest Version][badge-release]][packagist]
+[![Tests](https://github.com/JustSteveKing/laravel-flows/actions/workflows/tests.yml/badge.svg)](https://github.com/JustSteveKing/laravel-flows/actions/workflows/tests.yml)
+[![Formats](https://github.com/JustSteveKing/laravel-flows/actions/workflows/formats.yml/badge.svg)](https://github.com/JustSteveKing/laravel-flows/actions/workflows/formats.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Total Downloads][badge-downloads]][downloads]
+
+[php]: https://php.net
+[downloads]: https://packagist.org/packages/juststeveking/laravel-flows
+[packagist]: https://packagist.org/packages/juststeveking/laravel-flows
+
+[badge-release]: https://img.shields.io/packagist/v/juststeveking/laravel-flows.svg?style=flat-square&label=release
+[badge-php]: https://img.shields.io/packagist/php-v/juststeveking/laravel-flows.svg?style=flat-square
+[badge-downloads]: https://img.shields.io/packagist/dt/juststeveking/laravel-flows.svg?style=flat-square&colorB=mediumvioletred
+<!-- BADGES_END -->
 
 A fluent, modular workflow builder for Laravel that leverages the Pipeline pattern to simplify and organize business logic.
 
