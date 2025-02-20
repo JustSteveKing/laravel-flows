@@ -12,6 +12,7 @@ use JustSteveKing\Flows\Tests\Doubles\ExceptionStep;
 use JustSteveKing\Flows\Tests\Doubles\IsFalse;
 use JustSteveKing\Flows\Tests\Doubles\IsTrue;
 use PHPUnit\Framework\Attributes\Test;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
@@ -201,10 +202,10 @@ final class FlowTest extends PackageTestCase
     #[Test]
     public function itCanModifyPayloadInCatchBlock(): void
     {
-        $this->expectException(Exception::class);
+        $this->expectException(RuntimeException::class);
         $flow = Flow::start()
             ->run(function ($payload): void {
-                throw new Exception('Failed operation');
+                throw new RuntimeException('Failed operation');
             })
             ->catch(fn(Throwable $e, array $payload) => array_merge($payload, [
                 'error' => $e->getMessage(),
@@ -269,5 +270,42 @@ final class FlowTest extends PackageTestCase
         $this->expectExceptionMessage('Unhandled error');
 
         $flow->execute('test');
+    }
+
+    public function testLoggingIsCalledBeforeAndAfterStep(): void
+    {
+        $initialPayload = 'test';
+        $logCalls = [];
+
+        // Create a mock logger that collects log calls.
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger->expects($this->exactly(2))
+            ->method('info')
+            ->willReturnCallback(function (string $message, array $context) use (&$logCalls): void {
+                $logCalls[] = ['message' => $message, 'context' => $context];
+            });
+
+        $flow = Flow::start()
+            ->debug($logger)
+            ->run(DummyStep::class);
+
+        $finalResult = $flow->execute($initialPayload);
+
+        $this->assertSame('test foo', $finalResult);
+
+        // Check that at least one log call contains "Before step:" and one contains "After step:".
+        $beforeLogged = false;
+        $afterLogged = false;
+        foreach ($logCalls as $call) {
+            if (str_contains($call['message'], 'Before step:')) {
+                $beforeLogged = true;
+            }
+            if (str_contains($call['message'], 'After step:')) {
+                $afterLogged = true;
+            }
+        }
+
+        $this->assertTrue($beforeLogged, 'Expected a "Before step:" log message.');
+        $this->assertTrue($afterLogged, 'Expected an "After step:" log message.');
     }
 }

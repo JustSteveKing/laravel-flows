@@ -309,36 +309,58 @@ $result = Flow::start()->run(
 
 By following these interfaces, every step in your workflow will have a consistent contract, making your code more robust, maintainable, and easier to test.
 
+## Debugging & Logging
+
+The `debug()` method lets you inject a PSR-3 compatible logger (such as the Laravel built-in logger) into your workflow.
+When a logger is set, the Flow class automatically wraps each step with logging calls, which log the payload before and after each step is executed.
+This is invaluable for debugging complex workflows, as it gives you clear insights into how the data transforms throughout the process.
+
+### How it Works
+
+When you call `debug()`, the Flow instance stores the provided logger. Then, in the `execute()` method, if a logger is present, it wraps every step in a closure that:
+
+- Logs a “Before step:” message along with the current payload.
+- Executes the step (whether it’s a class or a closure).
+- Logs an “After step:” message along with the result from the step.
+
+This logging mechanism happens automatically without modifying your individual step logic, so you can focus on business logic and easily troubleshoot the execution flow.
+
+### Example Usage
+
+```php
+use JustSteveKing\Flows\Flow;
+use App\Flows\Steps\HashPassword;
+use Illuminate\Support\Facades\Log;
+
+$result = Flow::start()
+    ->debug(Log::channel('stack'))  // Inject the logger you want to use.
+    ->run(HashPassword::class)
+    ->execute('initial payload');
+```
+
+With the logger enabled, you’ll see log entries like:
+
+- **Before step**: "Before step: App\Flows\Steps\HashPassword" with the current payload.
+- **After step**: "After step: App\Flows\Steps\HashPassword" with the transformed payload.
+
+This feature is especially useful during development and troubleshooting, as it helps you track the data transformations throughout your workflow.
+
 ## Architecture Diagram
 
 ```mermaid
-flowchart TD
-    A[Flow::start] --> B[run Steps]
-    B --> C[branch Conditions]
-    C --> D[chain Steps]
-    D --> E[execute Payload]
-    E --> F[Final Output]
+sequenceDiagram
+    participant Client
+    participant Flow
+    participant Step
+    participant Logger
 
-    subgraph "Workflow Steps"
-        B1[Validate Data]
-        B2[Hash Password]
-        B3[Create User]
-        B4[Send Welcome Email]
-    end
-
-    subgraph "Conditional Branches"
-        C1[IsVIPUser?]
-        C2[Send VIP Welcome Email]
-    end
-
-    A --> B1
-    B1 --> B2
-    B2 --> B3
-    B3 --> B4
-    B4 --> C1
-    C1 -- Yes --> C2
-    C1 -- No --> D
-    C2 --> D
+    Client->>Flow: debug(logger)
+    Client->>Flow: execute(payload)
+    Flow->>Logger: log("Before step:", payload)
+    Flow->>Step: execute(payload)
+    Step-->>Flow: stepResult
+    Flow->>Logger: log("After step:", stepResult)
+    Flow-->>Client: stepResult
 ```
 
 ## Testing
