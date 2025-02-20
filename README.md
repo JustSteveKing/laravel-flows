@@ -348,33 +348,19 @@ This feature is especially useful during development and troubleshooting, as it 
 ## Architecture Diagram
 
 ```mermaid
-flowchart TD
-    A[Flow::start] --> B[run Steps]
-    B --> C[branch Conditions]
-    C --> D[chain Steps]
-    D --> E[execute Payload]
-    E --> F[Final Output]
+sequenceDiagram
+    participant Client
+    participant Flow
+    participant Step
+    participant Logger
 
-    subgraph "Workflow Steps"
-        B1[Validate Data]
-        B2[Hash Password]
-        B3[Create User]
-        B4[Send Welcome Email]
-    end
-
-    subgraph "Conditional Branches"
-        C1[IsVIPUser?]
-        C2[Send VIP Welcome Email]
-    end
-
-    A --> B1
-    B1 --> B2
-    B2 --> B3
-    B3 --> B4
-    B4 --> C1
-    C1 -- Yes --> C2
-    C1 -- No --> D
-    C2 --> D
+    Client->>Flow: debug(logger)
+    Client->>Flow: execute(payload)
+    Flow->>Logger: log("Before step:", payload)
+    Flow->>Step: execute(payload)
+    Step-->>Flow: stepResult
+    Flow->>Logger: log("After step:", stepResult)
+    Flow-->>Client: stepResult
 ```
 
 ## Testing
