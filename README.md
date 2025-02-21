@@ -275,6 +275,42 @@ $result = $flow->execute([
 
 When defining your workflows, you can mix and match steps and conditions seamlessly. Use `run()` or `chain()` for your steps and `branch()` for conditionally running sub-flows. This keeps your business logic clean and flexible.
 
+### Reusable Flow
+The `->with(...)` method in a flow offers you the flexibility you need to specify flow logic that can be re-used wherever you need it.
+
+Example with Reusable Flow:
+
+```php
+use JustSteveKing\Flows\Flow;
+
+$reusableFlow = function (Flow $flow) {
+    $flow->run(CreateUser::class);
+}
+
+$flow = Flow::start()->with($reusableFlow);
+```
+
+```php
+use JustSteveKing\Flows\Flow;
+
+final class ReusableFlow
+{
+    public function __invoke(Flow $flow): void
+    {
+        $flow->run(CreateUser::class);
+    }
+}
+
+$flow = Flow::start()->with(new ReusableFlow());
+```
+
+The `->with(...)` method accepts any form of `callable`, such as:
+- Closures (e.g. `function () {  }`)
+- Traditional callable notations (e.g. `[$this, 'methodName']`)
+- First-class callables (e.g. `$this->methodName(...)`)
+- Invokable classes (e.g. a class with the `__invoke` magic method)
+- Whatever else PHP defines as `callable`.
+
 #### Example Usage
 
 ```php

@@ -136,6 +136,19 @@ final class Flow
     }
 
     /**
+     * Add a reusable callback to the workflow.
+     *
+     * @param callable $callback
+     * @return Flow
+     */
+    public function with(callable $callback): Flow
+    {
+        $callback($this);
+
+        return $this;
+    }
+
+    /**
      * Execute the workflow with the given payload.
      *
      * @param mixed $payload
