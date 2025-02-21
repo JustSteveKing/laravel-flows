@@ -135,6 +135,13 @@ final class Flow
         return $this;
     }
 
+    public function with(callable $callback): Flow
+    {
+        $callback($this);
+
+        return $this;
+    }
+
     /**
      * Execute the workflow with the given payload.
      *

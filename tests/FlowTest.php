@@ -7,6 +7,7 @@ namespace JustSteveKing\Flows\Tests;
 use Exception;
 use JustSteveKing\Flows\Flow;
 use JustSteveKing\Flows\Tests\Doubles\DummyCondition;
+use JustSteveKing\Flows\Tests\Doubles\DummyReusableFlow;
 use JustSteveKing\Flows\Tests\Doubles\DummyStep;
 use JustSteveKing\Flows\Tests\Doubles\ExceptionStep;
 use JustSteveKing\Flows\Tests\Doubles\IsFalse;
@@ -307,5 +308,16 @@ final class FlowTest extends PackageTestCase
 
         $this->assertTrue($beforeLogged, 'Expected a "Before step:" log message.');
         $this->assertTrue($afterLogged, 'Expected an "After step:" log message.');
+    }
+
+    #[Test]
+    public function itCanBeReusable(): void
+    {
+        $closureFlow = fn(Flow $flow) => $flow->run(DummyStep::class);
+        $closureFlowResult = Flow::start()->with($closureFlow)->execute('test');
+        $this->assertEquals('test foo', $closureFlowResult);
+
+        $invokableClassFlowResult = Flow::start()->with(new DummyReusableFlow())->execute('test');
+        $this->assertEquals('test dummy reusable flow', $invokableClassFlowResult);
     }
 }
