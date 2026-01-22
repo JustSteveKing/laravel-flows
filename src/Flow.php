@@ -8,10 +8,16 @@ use Closure;
 use Illuminate\Support\Facades\Pipeline;
 use JustSteveKing\Flows\Contracts\FlowCondition;
 use JustSteveKing\Flows\Contracts\FlowStep;
+use JustSteveKing\Flows\Contracts\ValidatingStep;
+use JustSteveKing\Flows\Steps\ValidationStep;
+use Illuminate\Support\Facades\DB;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
 
+/**
+ * @template TPayload
+ */
 final class Flow
 {
     /**
@@ -57,6 +63,21 @@ final class Flow
     public function run(string|Closure $action): Flow
     {
         $this->steps[] = $action;
+
+        return $this;
+    }
+
+    /**
+     * @param class-string<ValidatingStep>|ValidatingStep $action
+     * @return $this
+     */
+    public function validate(string|ValidatingStep $action): Flow
+    {
+        if (is_string($action)) {
+            $action = resolve($action);
+        }
+
+        $this->steps[] = new ValidationStep($action);
 
         return $this;
     }
@@ -151,8 +172,8 @@ final class Flow
     /**
      * Execute the workflow with the given payload.
      *
-     * @param mixed $payload
-     * @return mixed
+     * @param TPayload $payload
+     * @return TPayload
      */
     public function execute(mixed $payload): mixed
     {
@@ -185,6 +206,17 @@ final class Flow
         return Pipeline::send($payload)
             ->through($steps)
             ->thenReturn();
+    }
+
+    /**
+     * Execute the workflow within a database transaction.
+     *
+     * @param TPayload $payload
+     * @return TPayload
+     */
+    public function transact(mixed $payload): mixed
+    {
+        return DB::transaction(fn () => $this->execute($payload));
     }
 
     /**
