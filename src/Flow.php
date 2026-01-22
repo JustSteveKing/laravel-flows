@@ -23,7 +23,7 @@ final class Flow
     /**
      * Flow constructor.
      *
-     * @param array<int, class-string<FlowStep>|Closure> $steps
+     * @param array<int, class-string<FlowStep>|Closure|FlowStep> $steps
      * @param LoggerInterface|null $logger
      */
     public function __construct(
@@ -34,20 +34,20 @@ final class Flow
     /**
      * Create a new Flow instance.
      *
-     * @return Flow
+     * @return static<TPayload>
      */
-    public static function start(): Flow
+    public static function start(): static
     {
-        return new Flow();
+        return new static();
     }
 
     /**
      * Set a logger for debugging.
      *
      * @param LoggerInterface $logger
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function debug(LoggerInterface $logger): Flow
+    public function debug(LoggerInterface $logger): static
     {
         $this->logger = $logger;
 
@@ -58,9 +58,9 @@ final class Flow
      * Add a step to the workflow.
      *
      * @param class-string<FlowStep>|Closure $action
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function run(string|Closure $action): Flow
+    public function run(string|Closure $action): static
     {
         $this->steps[] = $action;
 
@@ -69,9 +69,9 @@ final class Flow
 
     /**
      * @param class-string<ValidatingStep>|ValidatingStep $action
-     * @return $this
+     * @return static<TPayload>
      */
-    public function validate(string|ValidatingStep $action): Flow
+    public function validate(string|ValidatingStep $action): static
     {
         if (is_string($action)) {
             $action = resolve($action);
@@ -87,9 +87,9 @@ final class Flow
      *
      * @param class-string<FlowCondition> $condition
      * @param callable $callback
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function branch(string $condition, callable $callback): Flow
+    public function branch(string $condition, callable $callback): static
     {
         $this->steps[] = static function (mixed $payload, Closure $next) use ($condition, $callback) {
             $checker = resolve($condition);
@@ -107,9 +107,9 @@ final class Flow
      *
      * @param callable $condition A callable that receives the payload and returns a boolean.
      * @param class-string<FlowStep> $action
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function runIf(callable $condition, string $action): Flow
+    public function runIf(callable $condition, string $action): static
     {
         $this->steps[] = function (mixed $payload, Closure $next) use ($condition, $action) {
             if ( ! $condition($payload)) {
@@ -128,9 +128,9 @@ final class Flow
      * Add a chained step to the workflow.
      *
      * @param class-string<FlowStep> $action
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function chain(string $action): Flow
+    public function chain(string $action): static
     {
         $this->steps[] = $action;
 
@@ -141,9 +141,9 @@ final class Flow
      * Add error handling to the workflow.
      *
      * @param callable $errorHandler
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function catch(callable $errorHandler): Flow
+    public function catch(callable $errorHandler): static
     {
         $this->steps[] = static function (mixed $payload, Closure $next) use ($errorHandler) {
             try {
@@ -160,9 +160,9 @@ final class Flow
      * Add a reusable callback to the workflow.
      *
      * @param callable $callback
-     * @return Flow
+     * @return static<TPayload>
      */
-    public function with(callable $callback): Flow
+    public function with(callable $callback): static
     {
         $callback($this);
 
@@ -181,9 +181,9 @@ final class Flow
 
         if (null !== $this->logger) {
             $logger = $this->logger; // capture logger for closure.
-            $steps = array_map(function (string|Closure $step) use ($logger): Closure {
+            $steps = array_map(function (string|Closure|FlowStep $step) use ($logger): Closure {
                 return function ($payload, Closure $next) use ($step, $logger) {
-                    $stepName = is_string($step) ? $step : 'Closure';
+                    $stepName = is_string($step) ? $step : get_class($step);
 
                     $this->log(
                         message: "Before step: {$stepName}",
@@ -209,22 +209,15 @@ final class Flow
     }
 
     /**
-     * Execute the workflow within a database transaction.
-     *
-     * @param TPayload $payload
-     * @return TPayload
-     */
-    public function transact(mixed $payload): mixed
-    {
-        return DB::transaction(fn () => $this->execute($payload));
-    }
-
-    /**
-     * @param class-string<FlowStep> $step
+     * @param class-string<FlowStep>|FlowStep $step
      * @return FlowStep
      */
-    private function resolveStep(string $step): FlowStep
+    private function resolveStep(string|FlowStep $step): FlowStep
     {
+        if (is_object($step)) {
+            return $step;
+        }
+
         try {
             $step = resolve($step);
         } catch (Throwable $exception) {

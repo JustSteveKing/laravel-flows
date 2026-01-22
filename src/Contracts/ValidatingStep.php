@@ -10,7 +10,7 @@ interface ValidatingStep extends FlowStep
      * Get the validation rules for the step.
      *
      * @param  mixed $payload
-     * @return array
+     * @return array<string, array<string>>
      */
     public function rules(mixed $payload): array;
 }
